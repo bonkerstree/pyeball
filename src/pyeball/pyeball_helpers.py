@@ -12,18 +12,21 @@ def parse_document_args(args):
     try:
         document_paths = (args[1], args[2])        
     except IndexError:
-        logger.error('Please provide the paths to the documents to be compared with the following format:'
-                     '\n\n  python pyeball.py document1.pdf document2.pdf\n')
-        raise PyeballMissingDocumentArgs
+        error_msg = ('Please provide the paths to the documents to be compared with the following format:'
+                     '\n\n  python pyeball_main.py document1.pdf document2.pdf\n')
+        logger.error(error_msg)
+        raise PyeballMissingDocumentArgs(error_msg)
     
     ext = os.path.splitext(args[1])[1].lower()
     if ext != '.pdf':
-        logger.error(f'{args[1]} has a \"{ext}\" extension and is not a PDF')
-        raise PyeballWrongDocumentFormat
+        error_msg = f'{args[1]} has a \"{ext}\" extension and is not a PDF'
+        logger.error(error_msg)
+        raise PyeballWrongDocumentFormat(error_msg)
     
     ext = os.path.splitext(args[2])[1].lower()
     if ext != '.pdf':
-        logger.error(f'{args[2]} has a \"{ext}\" extension and is not a PDF')
-        raise PyeballWrongDocumentFormat
+        error_msg = f'{args[2]} has a \"{ext}\" extension and is not a PDF'
+        logger.error(error_msg)
+        raise PyeballWrongDocumentFormat(error_msg)
 
     return document_paths
