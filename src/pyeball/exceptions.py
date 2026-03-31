@@ -3,3 +3,6 @@ class PyeballMissingDocumentArgs(Exception):
 
 class PyeballWrongDocumentFormat(Exception):
     pass
+
+class PyeballSameDocumentIsBeingCompared(Exception):
+    pass
