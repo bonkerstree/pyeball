@@ -10,42 +10,53 @@ def compare_documents(doc1_path, doc2_path):
     
     doc1_images = convert_pdf_to_PIL_images(doc1_path)
     doc2_images = convert_pdf_to_PIL_images(doc2_path)
-
-    doc1_grayscales = []
-    for img in doc1_images:
-        doc1_grayscales.append(img.convert('L'))
-
-    doc2_grayscales = []
-    for img in doc2_images:
-        doc2_grayscales.append(img.convert('L'))
     
-    img_diff = 0
-    diff_origin = None
-    for img1, img2 in zip(doc1_grayscales, doc2_grayscales):
-        for x in range(0, img1.width):
-            for y in range(0, img2.height):
-                pixel_coordinates = (x, y)
-                pixel1 = img1.getpixel(pixel_coordinates)
-                pixel2 = img2.getpixel(pixel_coordinates)
-
-                if (pixel1 - pixel2) != 0:
-                    img_diff += 1
-                    if diff_origin is None:
-                        diff_origin = pixel_coordinates
-
     output = ComparisonOutput()
-    output.diff_count = 0
-    diffs = []
-    if img_diff > 0:
-        output.diff_count = 1
-        diffs.append(OutputDifference(diff_origin))
-    output.diffs = diffs
-    
+    output.region_diff_count = 0
+    for img1, img2 in zip(doc1_images, doc2_images):
+        diffs = []
+        diff_origin, diff_width, diff_height = _compute_basic_region_diff(img1, img2)
+        if diff_origin:
+            output.region_diff_count = 1
+            diffs.append(OutputDifference(diff_origin, diff_width, diff_height))
+            output.diffs = diffs
+
     return output
+
+def _compute_basic_region_diff(region1, region2):
+    """
+    Computes the diff of the two regions by converting them to grayscale and then comparing the values
+    of the pixels. Returns a tuple containing the coordinates of the first pixel with a diff, the diff width,
+    and the diff height.
+    """
+    grayscale1 = region1.convert('L')
+    grayscale2 = region2.convert('L')
+    
+    diff_origin = None
+    diff_height = 0
+    max_diff_width = 0
+    for y in range(0, grayscale2.height):
+        diff_width = 0
+        for x in range(0, grayscale1.width):
+            pixel_coordinates = (x, y)
+            pixel1 = grayscale1.getpixel(pixel_coordinates)
+            pixel2 = grayscale2.getpixel(pixel_coordinates)
+
+            if (pixel1 - pixel2) != 0:
+                diff_width += 1
+                
+                if diff_origin is None:
+                    diff_origin = pixel_coordinates
+                    
+        max_diff_width = max(max_diff_width, diff_width)
+        if diff_width > 0:
+            diff_height += 1
+    
+    return (diff_origin, max_diff_width, diff_height)
 
 @dataclass
 class ComparisonOutput():
-    diff_count : int = -1
+    region_diff_count : int = -1
     diffs : list = None
 
 @dataclass
